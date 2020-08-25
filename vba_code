@@ -1,0 +1,97 @@
+Sub Final()
+
+Dim ticker As String
+Dim lastrow As Long
+lastrow = Cells(Rows.Count, 1).End(xlUp).Row
+Dim volume As Double
+volume = 0
+Dim open_price As Double
+Dim close_price As Double
+Dim yearly_change As Double
+Dim percent_change As Double
+Dim summary_table_row As Integer
+summary_table_row = 2
+
+'set headers for new table
+Cells(1, 9).Value = "Ticker"
+Cells(1, 10).Value = "Yearly Change"
+Cells(1, 11).Value = "Percent Change"
+Cells(1, 12).Value = "Total Stock Volume"
+
+
+For i = 2 To lastrow
+
+If Cells(i + 1, 1).Value <> Cells(i, 1).Value Then
+    ticker = Cells(i, 1).Value
+    volume = volume + Cells(i, 7).Value
+    open_price = Cells(i, 3).Value
+    close_price = Cells(i, 6).Value
+    yearly_change = open_price - close_price
+'calculate percent change. can not divide by 0!!!!
+If (open_price = 0 And close_price = 0) Then
+    percent_change = 0
+ElseIf (open_price = 0 And close_price <> 0) Then
+    percent_change = 1
+Else
+    percent_change = yearly_change / open_price
+End If
+
+'print where its going
+    Range("I" & summary_table_row).Value = ticker
+    Range("L" & summary_table_row).Value = volume
+    Range("J" & summary_table_row).Value = yearly_change
+    Range("K" & summary_table_row).Value = percent_change
+    Range("K" & summary_table_row).Select
+    Selection.Style = "Percent"
+'add 1 to summary table row
+    summary_table_row = summary_table_row + 1
+'reset volume
+    volume = 0
+Else
+    volume = volume + Cells(i, 7).Value
+End If
+Next i
+
+
+'color coding
+' Determine the Last Row of Yearly Change
+YCLastRow = Cells(Rows.Count, 9).End(xlUp).Row
+
+For j = 2 To YCLastRow
+If Cells(j, 10) > 0 Or Cells(j, 10) = 0 Then
+    Cells(j, 10).Interior.ColorIndex = 4
+Else
+    Cells(j, 10).Interior.ColorIndex = 3
+End If
+Next j
+
+'CHALLENGE
+Cells(2, 15).Value = "Greatest % Increase"
+Cells(3, 15).Value = "Greatest % Decrease"
+Cells(4, 15).Value = "Greatest Total Volume"
+Cells(1, 16).Value = "Ticker"
+Cells(1, 17).Value = "Value"
+
+For c = 2 To YCLastRow
+If Cells(c, 11).Value = WorksheetFunction.Max(Range("K2:K" & YCLastRow)) Then
+    Cells(2, 16).Value = Cells(c, 9).Value
+    Cells(2, 17).Value = Cells(c, 11).Value
+    Cells(2, 17).NumberFormat = "0.00%"
+ElseIf Cells(c, 11).Value = WorksheetFunction.Min(Range("K2:K" & YCLastRow)) Then
+    Cells(3, 16).Value = Cells(c, 9).Value
+    Cells(3, 17).Value = Cells(c, 11).Value
+    Cells(3, 17).NumberFormat = "0.00%"
+ElseIf Cells(c, 12).Value = WorksheetFunction.Max(Range("L2:L" & YCLastRow)) Then
+    Cells(4, 16).Value = Cells(c, 9).Value
+    Cells(4, 17).Value = Cells(c, 12).Value
+End If
+Next c
+
+'formating header and autofit
+Range("A1:L1,P1,Q1").Select
+    Selection.Style = "Heading 2"
+    Columns("A:Q").Select
+    Columns("A:Q").EntireColumn.AutoFit
+Range("O2:O4").Select
+    Selection.Style = "Heading 2"
+End Sub
